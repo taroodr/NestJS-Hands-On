@@ -26,7 +26,7 @@ https://speakerdeck.com/potato4d/what-is-nestjs-number-nestjs-meetup?slide=40
 オブジェクトやクラスの依存を外部から注入すること。  
 これだけを聞いてもよくわからないと思うのでコードを見ながら説明します。
 
-DBにアクセスしてデータを取得してくるRepository classと
+DBにアクセスしてデータを取得してくるRepository クラスと
 ```typescript
 type Jedi = {
     id: string;
@@ -48,7 +48,7 @@ class JediRepository implements JediRepositoryIF {
 }
 ```
 
-Repository classを利用するServiceクラスがあったとします。
+Repository クラスを利用するServiceクラスがあったとします。
 
 
 ```typescript
@@ -63,7 +63,7 @@ class JediService {
 
 ```
 
-注目すべき点は、 Service classの constructor部分です。
+注目すべき点は、 Service クラスの constructor部分です。
 
 ```typescript
     constructor(private readonly repository: JediRepositoryIF) {}
@@ -72,10 +72,10 @@ class JediService {
 サービスクラスの実装ではなく、Interfaceを指定して点がポイントです。  
 なぜこんなことをするのでしょうか？
 
-それはService classから Repository classへの依存を避けるためです。  
+それはService クラスから Repository クラスへの依存を避けるためです。  
 
 
-上記のclassを使うコンシューマ側の実装を考えてみしょう。  
+上記のクラスを使うコンシューマ側の実装を考えてみしょう。  
 以下のようにインスタンスを作る際に依存関係を注入することになりますね。
 
 ```typescript
