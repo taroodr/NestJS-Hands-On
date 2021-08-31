@@ -1,8 +1,9 @@
 # part1 はじめてのNestJS
 
 ## はじめに
-このハンズオンの目的は、フロントエンドはわかるけど
-TypeScriptでバックエンド開発はしたことが無いという人にNestJSでの開発の基本を学んでもらうことです。
+このハンズオンの目的は、  
+「フロントエンドはわかるけどTypeScriptでバックエンド開発はしたことが無い」  
+という人にNestJSでの開発の基本を学んでもらうことです。  
 パートは複数回に分かれています。
 
 - part1 NestJSの基本
@@ -10,32 +11,112 @@ TypeScriptでバックエンド開発はしたことが無いという人にNest
 - part3 未定
 
 
-## とりあえず読もう
+## とりあえず読むといい資料
 https://speakerdeck.com/potato4d/what-is-nestjs-number-nestjs-meetup?slide=40
 
 ## NestJSとは
 - TypeScriptによって記述されたバックエンドフレームワーク
 - 実装と疎結合になるようなアーキテクチャを採用(DI: dependency injectionが書きやすい)
-- cli でプロジェクトやモジュールのテンプレートを生成できる
+- cli でプロジェクトやモジュールのテンプレートが生成可能
   - アーキテクチャの統一がしやすい
 
-コラム
-DI: dependency injectionとは？
-オブジェクトやクラスの依存を外部から注入すること
+### DI: dependency injectionとは？
+※すでに知ってるよっていう人は飛ばしてOKです
 
-例
-```TypeScript
-// あとで例を書くよ
+オブジェクトやクラスの依存を外部から注入すること。  
+これだけを聞いてもよくわからないと思うのでコードを見ながら説明します。
+
+DBにアクセスしてデータを取得してくるRepository classと
+```typescript
+type Jedi = {
+    id: string;
+    name: string;
+}
+
+interface JediRepositoryIF {
+    get(): Jedi
+}
+
+class JediRepository implements JediRepositoryIF {
+    get(): Jedi {
+        // 実際にはRDB等にアクセスしてデータをとってくるコードを想定
+        return {
+            id: "id",
+            name: "luke",
+        }
+    }
+}
+```
+
+Repository classを利用するServiceクラスがあったとします。
+
+
+```typescript
+
+class JediService {
+    constructor(private readonly repository: JediRepositoryIF) {}
+
+    getJedi() {
+        return this.repository.get()
+    }
+}
 
 ```
 
-DIを使うことで、
-- DBを扱うクラスへ依存
-- 外部APIを扱うクラスへの依存
-があるクラスのテストがしやすくなる。
+注目すべき点は、 Service classの constructor部分です。
+
+```typescript
+    constructor(private readonly repository: JediRepositoryIF) {}
+```
+
+サービスクラスの実装ではなく、Interfaceを指定して点がポイントです。  
+なぜこんなことをするのでしょうか？
+
+それはService classから Repository classへの依存を避けるためです。  
+
+
+上記のclassを使うコンシューマ側の実装を考えてみしょう。  
+以下のようにインスタンスを作る際に依存関係を注入することになりますね。
+
+```typescript
+function main () {
+    const jediRepository = new JediRepository();
+    const jediService = new JediService(jediRepository);
+    console.log(jediService.getJedi())
+}
+
+main()
+```
+
+JediServiceにわたす引数はInterfaceを満たしていればよいので、別の実装を渡すことも可能です。  
+つまりユースケースによって実装を差し替えられるようになります。  
+
+例えばテストの時だけ実装をMockに差し替えることも可能です。
+
+```typescript
+function test () {
+    const jediRepository = new MockJediRepository();
+    const jediService = new JediService(jediRepository);
+    console.log(jediService.getJedi())
+}
+
+main()
+```
+#### DIのメリット・デメリット
+
+■メリット
+- DBや外部APIなどを扱うクラスへ依存があるクラスのテスタビリティがあがる  
+
+■デメリット
+- 規模が大きくなってくるとDI用のコードが増え複雑になる。
+
+
+※ちなみにNestJSではフレームワークがDIの面倒を見てくれるので、楽です。
+
+
 
 ## やってみる
-早速NestJSのプロジェクトを作ってみましょう。
+早速NestJSのプロジェクトを作ってみましょう。  
 Nest CLIを使うことでプロジェクトの雛形を作成できます。
 
 ```bash
@@ -43,7 +124,7 @@ yarn global add @nestjs/cli
 nest new project-name
 ```
 
-yarn か npmを選んでと言われますが、好みの方でOKです。
+yarn か npmを選んでと言われますが、好みの方を選択してください。  
 以下のメッセージが出力されたらOKです。
 ```
                           Thanks for installing Nest 🙏
@@ -56,7 +137,7 @@ yarn か npmを選んでと言われますが、好みの方でOKです。
 
 では `yarn start:dev` で起動してみましょう。  
 localhost:3000 でサーバが立ち上がります。  
-以下のように表示されればOKです。
+以下のように表示されれば大丈夫です。
 
  ```
  [21:15:46] Starting compilation in watch mode...
@@ -72,7 +153,7 @@ localhost:3000 でサーバが立ち上がります。
 ```
 
 ## プロジェクトの構成
-いくつかファイルが作成されたと思いますが、コアとなるファイルはsrcディレクトリ配下のファイルです。
+いくつかファイルが作成されたと思いますが、コアとなるファイルはsrcディレクトリ配下のファイルになります。
 
 ```
 src
@@ -84,10 +165,10 @@ src
 ```
 
 ### app.service.ts
-アプリケーションサービスクラスを定義するためのファイル。
+アプリケーションサービスクラスを定義するためのファイル。  
 とりあえず、メインとなる処理を書く場所と考えてしまってOKです。
 
-生成されたファイルには Hello Worldを返却するメソッドが定義されている。
+生成されたファイルには Hello Worldを返却するメソッドが定義されています。
 
 ```typescript
 import { Injectable } from '@nestjs/common';
@@ -102,15 +183,14 @@ export class AppService {
 
 ```
 コラム 
-
 例えばDDDを用いたプロジェクトでいうと、Domainレイヤーのクラスを扱うクラスになる。
 例: Entity, Value Object, Repository, Domain Service などを扱う
 ```
 
 ### app.controller.ts
-controllerはRailsなどでも存在するいわゆるcontrollerのことです。
-リクエストを処理し、クライアントにレスポンスを返す処理にだけ関心を持ちます。
-なるべく薄い実装にしておくと良いです。
+controllerはRailsなどでも存在するいわゆるcontrollerのことです。  
+リクエストを処理し、クライアントにレスポンスを返す処理にだけ関心を持ちます。  
+なるべく薄い実装にしておくと良いです。  
 
 ```typescript
 import { Controller, Get } from '@nestjs/common';
@@ -130,7 +210,6 @@ export class AppController {
 
 ```
 コラム 
-
 https://docs.nestjs.com/controllers#request-object
 `@Req` デコレータを使うことで requestオブジェクトを触れるようになるが、
 requestオブジェクトをcontroller以外から触るような実装は避けたほうがよい。
@@ -138,8 +217,8 @@ requestオブジェクトをcontroller以外から触るような実装は避け
 
 
 ### app.module.ts
-依存関係の解決をしてくれるファイルです。
-このように書くことで、controllerのconstructorへserviceのインスタンスの注入がおこなえます。
+依存関係の解決をしてくれるファイルです。  
+以下のように書くことでcontrollerのconstructorへserviceのインスタンスの注入がおこなえます。
 
 ```typescript
 import { Module } from '@nestjs/common';
@@ -156,7 +235,7 @@ export class AppModule {}
 
 ### main.ts
 アプリケーションのエントリポイントです。  
-デフォルトではexpressが使われますが、Fastifyを使うように変更することもできます。
+デフォルトでは内部的にexpressが使われますが、Fastifyを使うように変更することもできます。
 
 ```typescript
 import { NestFactory } from '@nestjs/core';
@@ -172,7 +251,7 @@ bootstrap();
 ## APIを書いてみる
 概要が分かってきたところで、コードに手を加えてみましょう。
 
-今回は以下のUserを返却するAPIを作ってみることにします。
+今回は以下の定義のUserを返却するAPIを作ってみることにします。
 
 ```typescript
 type User = {
@@ -349,5 +428,6 @@ describe('AppController', () => {
 これでserviceの実装に依存しないテストがかけました！  
 
 ## まとめ
-このように、NestJSはDIの仕組みを用いてクリーンなコードが書きやすいフレームワークといえます。  
+このように、NestJSはDIの仕組みを用いておりクリーンなコードが書きやすいフレームワークといえるでしょう。
+## 筆者感想
 自分でDIコンテナを実装する必要もないのでDDDとの相性もいいと思いました。
