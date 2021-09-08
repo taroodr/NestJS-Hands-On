@@ -38,7 +38,7 @@ NestJSでは、GraphQLサーバーを構築する方法として、コードフ�
 
 ## 実装していく
 `app.module.ts` を以下の通り書き換えます。
-```
+```typescript
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 
@@ -143,7 +143,7 @@ query getUser {
 ```
 
 以下のようにデータが返ってくるはずです。
-```graphql
+```json
 {
   "data": {
     "user": {
@@ -205,7 +205,7 @@ export class UsersService {
 playgroundから先程ののQueryを実行してみましょう。  
 以下が返却されていれば、user APIの完成です。
 
-```
+```json
 {
   "data": {
     "user": {
